@@ -6,9 +6,19 @@ import { cn } from "@/lib/utils";
 import type { View } from "@/store/gardenStore";
 import { actions, useGarden } from "@/store/runtime";
 
-const VIEWS: { id: View; label: string; icon: typeof ChefHat }[] = [
-  { id: "kitchen", label: "Kitchen", icon: ChefHat },
-  { id: "telemetry", label: "Telemetry", icon: Activity },
+const VIEWS: { id: View; label: string; hint: string; icon: typeof ChefHat }[] = [
+  {
+    id: "kitchen",
+    label: "Kitchen",
+    hint: "What to clip and water today",
+    icon: ChefHat,
+  },
+  {
+    id: "telemetry",
+    label: "Telemetry",
+    hint: "Live sensors, valve control, thresholds and the message log",
+    icon: Activity,
+  },
 ];
 
 export function AppHeader() {
@@ -31,7 +41,11 @@ export function AppHeader() {
           <span className="font-display text-[26px] leading-none font-semibold tracking-[-0.03em]">Sprig</span>
         </a>
 
-        <div role="tablist" aria-label="View" className="relative ml-auto flex rounded-full bg-paper-deep/80 p-1 ring-1 ring-rule sm:ml-8 md:mr-auto">
+        <div
+          role="tablist"
+          aria-label="View"
+          className="relative ml-auto flex rounded-full bg-paper-deep/80 p-1 ring-1 ring-rule sm:ml-8 md:mr-auto"
+        >
           {VIEWS.map((v, i) => {
             const active = v.id === view;
             const Icon = v.icon;
@@ -46,6 +60,7 @@ export function AppHeader() {
                 type="button"
                 aria-selected={active}
                 aria-controls="view-panel"
+                title={v.hint}
                 tabIndex={active ? 0 : -1}
                 onClick={() => actions().setView(v.id)}
                 onKeyDown={(e) => onKeyDown(e, i)}
@@ -62,7 +77,9 @@ export function AppHeader() {
           <span
             aria-hidden
             className="absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-ink transition-transform duration-300 ease-[var(--ease-out-quart)]"
-            style={{ transform: view === "telemetry" ? "translateX(100%)" : "none" }}
+            style={{
+              transform: view === "telemetry" ? "translateX(100%)" : "none",
+            }}
           />
         </div>
 
@@ -79,10 +96,17 @@ function BrokerPill() {
   const sample = useRef({ at: now, count, rate: 0 });
   if (now !== sample.current.at) {
     const dt = (now - sample.current.at) / 1000;
-    sample.current = { at: now, count, rate: Math.round((count - sample.current.count) / dt) };
+    sample.current = {
+      at: now,
+      count,
+      rate: Math.round((count - sample.current.count) / dt),
+    };
   }
   return (
-    <div className="hidden items-center gap-2 rounded-full border border-rule bg-card/70 py-1.5 pr-3 pl-2.5 md:flex" title="In-memory MQTT event bus">
+    <div
+      className="hidden items-center gap-2 rounded-full border border-rule bg-card/70 py-1.5 pr-3 pl-2.5 md:flex"
+      title="In-memory MQTT event bus"
+    >
       <StatusDot tone="leaf" pulse />
       <span className="font-mono text-[11px] text-ink-soft">
         sim-mqtt · <span className="tabular inline-block w-[4ch] text-right text-ink">{sample.current.rate}</span> msg/s

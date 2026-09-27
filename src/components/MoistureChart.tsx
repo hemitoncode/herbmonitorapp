@@ -41,31 +41,99 @@ export function MoistureChart({ history, threshold, optimalMin, optimalMax, heig
   return (
     <div ref={ref} className="relative w-full" style={{ height }}>
       {width > 0 && (
-        <svg width={width} height={height} className="block touch-none" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
-          <rect x={PAD.left} y={y(optimalMax)} width={plotW} height={y(optimalMin) - y(optimalMax)} fill="var(--color-leaf)" opacity={0.07} />
+        <svg
+          width={width}
+          height={height}
+          className="block touch-none"
+          onPointerMove={onMove}
+          onPointerLeave={() => setHover(null)}
+        >
+          <rect
+            x={PAD.left}
+            y={y(optimalMax)}
+            width={plotW}
+            height={y(optimalMin) - y(optimalMax)}
+            fill="var(--color-leaf)"
+            opacity={0.07}
+          />
           {GRID.map((g) => (
             <g key={g}>
-              <line x1={PAD.left} x2={PAD.left + plotW} y1={y(g)} y2={y(g)} stroke="var(--color-rule)" strokeWidth={1} />
-              <text x={PAD.left - 8} y={y(g)} textAnchor="end" dominantBaseline="middle" className="tabular fill-ink-muted font-mono text-[10px]">
+              <line
+                x1={PAD.left}
+                x2={PAD.left + plotW}
+                y1={y(g)}
+                y2={y(g)}
+                stroke="var(--color-rule)"
+                strokeWidth={1}
+              />
+              <text
+                x={PAD.left - 8}
+                y={y(g)}
+                textAnchor="end"
+                dominantBaseline="middle"
+                className="tabular fill-ink-muted font-mono text-[10px]"
+              >
                 {g}
               </text>
             </g>
           ))}
-          <line x1={PAD.left} x2={PAD.left + plotW} y1={y(threshold)} y2={y(threshold)} stroke="var(--color-ink)" strokeWidth={1} />
-          <text x={PAD.left + plotW + 6} y={y(threshold)} dominantBaseline="middle" className="fill-ink font-mono text-[10px] font-semibold">
+          <line
+            x1={PAD.left}
+            x2={PAD.left + plotW}
+            y1={y(threshold)}
+            y2={y(threshold)}
+            stroke="var(--color-ink)"
+            strokeWidth={1}
+          />
+          <text
+            x={PAD.left + plotW + 6}
+            y={y(threshold)}
+            dominantBaseline="middle"
+            className="fill-ink font-mono text-[10px] font-semibold"
+          >
             {Math.round(threshold)}%
           </text>
 
           {area && <path d={area} fill="var(--color-ink)" opacity={0.05} />}
-          {line && <path d={line} fill="none" stroke="var(--color-ink)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />}
+          {line && (
+            <path
+              d={line}
+              fill="none"
+              stroke="var(--color-ink)"
+              strokeWidth={2}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          )}
           {last && hover === null && (
-            <circle cx={x(history.length - 1)} cy={y(last.moisture)} r={4.5} fill="var(--color-ink)" stroke="var(--color-card)" strokeWidth={2} />
+            <circle
+              cx={x(history.length - 1)}
+              cy={y(last.moisture)}
+              r={4.5}
+              fill="var(--color-ink)"
+              stroke="var(--color-card)"
+              strokeWidth={2}
+            />
           )}
 
           {hovered && hover !== null && (
             <g>
-              <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={PAD.top + plotH} stroke="var(--color-ink-muted)" strokeWidth={1} />
-              <circle cx={x(hover)} cy={y(hovered.moisture)} r={4.5} fill="var(--color-ink)" stroke="var(--color-card)" strokeWidth={2} />
+              <line
+                x1={x(hover)}
+                x2={x(hover)}
+                y1={PAD.top}
+                y2={PAD.top + plotH}
+                stroke="var(--color-ink-muted)"
+                strokeWidth={1}
+              />
+              <circle
+                cx={x(hover)}
+                cy={y(hovered.moisture)}
+                r={4.5}
+                fill="var(--color-ink)"
+                stroke="var(--color-card)"
+                strokeWidth={2}
+              />
             </g>
           )}
 
@@ -95,14 +163,26 @@ export function MoistureChart({ history, threshold, optimalMin, optimalMax, heig
 }
 
 /** Tiny trace for node lists. */
-export function Sparkline({ history, threshold, width = 72, height = 22 }: { history: MoisturePoint[]; threshold: number; width?: number; height?: number }) {
+export function Sparkline({
+  history,
+  threshold,
+  width = 72,
+  height = 22,
+}: {
+  history: MoisturePoint[];
+  threshold: number;
+  width?: number;
+  height?: number;
+}) {
   const points = history.slice(-40);
   const lo = Math.min(threshold, ...points.map((p) => p.moisture)) - 3;
   const hi = Math.max(threshold, ...points.map((p) => p.moisture)) + 3;
   const y = (m: number) => height - ((m - lo) / (hi - lo || 1)) * height;
   const step = width / 39;
   const off = 40 - points.length;
-  const d = points.map((p, i) => `${i ? "L" : "M"}${((off + i) * step).toFixed(1)} ${y(p.moisture).toFixed(1)}`).join("");
+  const d = points
+    .map((p, i) => `${i ? "L" : "M"}${((off + i) * step).toFixed(1)} ${y(p.moisture).toFixed(1)}`)
+    .join("");
   return (
     <svg width={width} height={height} className="overflow-visible" aria-hidden>
       <line x1={0} x2={width} y1={y(threshold)} y2={y(threshold)} stroke="var(--color-rule-strong)" strokeWidth={1} />

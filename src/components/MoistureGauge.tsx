@@ -62,33 +62,69 @@ export function MoistureGauge({ value, threshold, optimalMin, optimalMax, tone, 
     >
       <svg viewBox={`0 0 ${SIZE} ${VIEW_H}`} className="size-full overflow-visible">
         {/* Optimal band, outside the track */}
-        <path d={arc(optimalMin, optimalMax, R + 13)} stroke="var(--color-leaf)" strokeOpacity={0.45} strokeWidth={3} fill="none" strokeLinecap="round" />
+        <path
+          d={arc(optimalMin, optimalMax, R + 13)}
+          stroke="var(--color-leaf)"
+          strokeOpacity={0.45}
+          strokeWidth={3}
+          fill="none"
+          strokeLinecap="round"
+        />
         {/* Track */}
         <path d={arc(0, 100, R)} stroke="var(--color-paper-deep)" strokeWidth={16} fill="none" strokeLinecap="round" />
         {/* Value */}
-        {value !== null && <path
-          d={arc(0, 100, R)}
-          pathLength={100}
-          stroke={toneStroke[tone]}
-          strokeWidth={16}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={`${Math.max(0.01, v)} 200`}
-          style={{ transition: "stroke-dasharray 320ms var(--ease-out-quart), stroke 400ms ease" }}
-        />}
+        {value !== null && (
+          <path
+            d={arc(0, 100, R)}
+            pathLength={100}
+            stroke={toneStroke[tone]}
+            strokeWidth={16}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={`${Math.max(0.01, v)} 200`}
+            style={{
+              transition: "stroke-dasharray 320ms var(--ease-out-quart), stroke 400ms ease",
+            }}
+          />
+        )}
         {/* End marker with a surface ring */}
         {value !== null && (
-          <g style={{ transform: `rotate(${angleFor(v)}deg)`, transformOrigin: `${C}px ${C}px`, transition: "transform 320ms var(--ease-out-quart)" }}>
+          <g
+            style={{
+              transform: `rotate(${angleFor(v)}deg)`,
+              transformOrigin: `${C}px ${C}px`,
+              transition: "transform 320ms var(--ease-out-quart)",
+            }}
+          >
             <circle cx={C} cy={C - R} r={6.5} fill="var(--color-card)" stroke={toneStroke[tone]} strokeWidth={3} />
           </g>
         )}
         {/* Threshold reference */}
-        <line x1={tx1} y1={ty1} x2={tx2} y2={ty2} stroke="var(--color-ink)" strokeWidth={2} strokeLinecap="round" style={{ transition: "all 200ms ease" }} />
-        <text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle" className="fill-ink font-mono text-[11px] font-semibold">
+        <line
+          x1={tx1}
+          y1={ty1}
+          x2={tx2}
+          y2={ty2}
+          stroke="var(--color-ink)"
+          strokeWidth={2}
+          strokeLinecap="round"
+          style={{ transition: "all 200ms ease" }}
+        />
+        <text
+          x={lx}
+          y={ly}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="fill-ink font-mono text-[11px] font-semibold"
+        >
           {Math.round(threshold)}%
         </text>
-        <text x={zx - 4} y={zy + 22} textAnchor="middle" className="fill-ink-muted font-mono text-[10px]">0</text>
-        <text x={hx + 4} y={hy + 22} textAnchor="middle" className="fill-ink-muted font-mono text-[10px]">100</text>
+        <text x={zx - 4} y={zy + 22} textAnchor="middle" className="fill-ink-muted font-mono text-[10px]">
+          0
+        </text>
+        <text x={hx + 4} y={hy + 22} textAnchor="middle" className="fill-ink-muted font-mono text-[10px]">
+          100
+        </text>
       </svg>
 
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pt-6">

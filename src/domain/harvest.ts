@@ -16,9 +16,7 @@ export interface HarvestState {
   label: string;
 }
 
-export function harvestState(
-  profile: Pick<HerbProfile, "regrowthCycleDays" | "daysSinceLastCut">,
-): HarvestState {
+export function harvestState(profile: Pick<HerbProfile, "regrowthCycleDays" | "daysSinceLastCut">): HarvestState {
   const { regrowthCycleDays: cycle, daysSinceLastCut: days } = profile;
   const peakStartDay = cycle * PEAK_START_RATIO;
   const boltingDay = cycle * BOLTING_RATIO;

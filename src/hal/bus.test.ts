@@ -35,7 +35,10 @@ describe("InMemoryMqttBus", () => {
     const handler = vi.fn();
     bus.subscribe("garden/basil/#", handler);
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler.mock.calls[0]![0]).toMatchObject({ payload: { state: "OPEN" }, retained: true });
+    expect(handler.mock.calls[0]![0]).toMatchObject({
+      payload: { state: "OPEN" },
+      retained: true,
+    });
   });
 
   it("stops delivering after unsubscribe", () => {

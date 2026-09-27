@@ -16,8 +16,7 @@ function setup(moisture = 42, totalLiters = 10) {
   });
   engine.boot();
   const node = engine.nodes.get("basil")!;
-  const last = <T>(topic: string) =>
-    [...messages].reverse().find((m) => m.topic === topic)?.payload as T | undefined;
+  const last = <T>(topic: string) => [...messages].reverse().find((m) => m.topic === topic)?.payload as T | undefined;
   const command = (action: "START" | "STOP") => bus.publish(topics.valveCommand("basil"), { action });
   return { bus, engine, node, messages, last, command };
 }
@@ -57,7 +56,10 @@ describe("VirtualNode physics", () => {
     command("STOP");
     const used = last<WaterUsedPayload>(topics.waterUsed("basil"))!;
     expect(used.totalLiters).toBeCloseTo(10.1, 6);
-    expect(last<ValveStatePayload>(topics.valveState("basil"))).toMatchObject({ state: "CLOSED", flowRateLpm: 0 });
+    expect(last<ValveStatePayload>(topics.valveState("basil"))).toMatchObject({
+      state: "CLOSED",
+      flowRateLpm: 0,
+    });
   });
 
   it("watchdog closes the valve after 60 s and flags a warning", () => {
@@ -89,14 +91,18 @@ describe("VirtualNode physics", () => {
     const { engine, node, messages, last, command } = setup(20);
     command("START");
     engine.setLink("basil", "offline");
-    expect(last<{ online: boolean }>(topics.status("basil"))).toEqual({ online: false });
+    expect(last<{ online: boolean }>(topics.status("basil"))).toEqual({
+      online: false,
+    });
     const count = messages.length;
     command("STOP"); // never arrives
     engine.step(60);
     expect(messages.length).toBe(count + 1); // only the STOP command itself
     expect(node.valveOpen).toBe(false); // on-device watchdog still fired
     engine.setLink("basil", "online");
-    expect(last<{ online: boolean }>(topics.status("basil"))).toEqual({ online: true });
+    expect(last<{ online: boolean }>(topics.status("basil"))).toEqual({
+      online: true,
+    });
     expect(last<ValveStatePayload>(topics.valveState("basil"))!.warning).toBe(WATCHDOG_WARNING);
   });
 

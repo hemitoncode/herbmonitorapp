@@ -28,10 +28,17 @@ export function MoistureBar({
   return (
     <div className={cn("relative h-2 rounded-full transition-colors duration-500", track[tone], className)}>
       <div
-        className={cn("absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-300 ease-out", fill[tone])}
+        className={cn(
+          "absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-300 ease-out",
+          fill[tone],
+        )}
         style={{ width: `${value ?? 0}%` }}
       />
-      <div className="absolute -inset-y-1 w-0.5 rounded-full bg-ink" style={{ left: `calc(${threshold}% - 1px)` }} aria-hidden />
+      <div
+        className="absolute -inset-y-1 w-0.5 rounded-full bg-ink"
+        style={{ left: `calc(${threshold}% - 1px)` }}
+        aria-hidden
+      />
     </div>
   );
 }

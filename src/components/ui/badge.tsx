@@ -29,7 +29,15 @@ export function Badge({
 }
 
 /** Status dot with an optional live pulse. */
-export function StatusDot({ tone, pulse = false, className }: { tone: BadgeTone; pulse?: boolean; className?: string }) {
+export function StatusDot({
+  tone,
+  pulse = false,
+  className,
+}: {
+  tone: BadgeTone;
+  pulse?: boolean;
+  className?: string;
+}) {
   const color = {
     leaf: "bg-leaf",
     amber: "bg-amber",

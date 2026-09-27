@@ -1,5 +1,6 @@
 import { ChevronUp, FastForward, FlaskConical, Radio, WifiOff, Wifi, Zap } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { DemoWalkthrough } from "@/components/DemoWalkthrough";
 import { Segmented } from "@/components/ui/segmented";
 import { Slider } from "@/components/ui/slider";
 import { SIM_SPEEDS, type SimSpeed } from "@/engine/engine";
@@ -23,6 +24,7 @@ export function SimulationDrawer() {
     links: s.links,
   }));
   const liveMoisture = useGarden((s) => s.runtime[s.selectedHerbId]?.telemetry?.moisture ?? null);
+  const threshold = useGarden((s) => s.runtime[s.selectedHerbId]?.threshold ?? 0);
   const [drag, setDrag] = useState<number | null>(null);
   const link = links[selected] ?? "online";
 
@@ -54,13 +56,25 @@ export function SimulationDrawer() {
           className="flex h-12 w-full items-center gap-3 text-left"
         >
           <FlaskConical className="size-4 text-bench-muted" aria-hidden />
-          <span className="text-[13px] font-semibold">Simulation harness</span>
-          <span className="rounded bg-bench-raised px-1.5 py-0.5 font-mono text-[10px] text-bench-muted ring-1 ring-bench-rule">DEV</span>
-          <span className="hidden truncate font-mono text-[11px] text-bench-muted sm:inline">
-            {SPEED_LABEL[speed].short} · target {profiles[selected]?.name} · link {link}
+          <span className="shrink-0 text-[13px] font-semibold whitespace-nowrap">Simulation harness</span>
+          <span className="hidden shrink-0 rounded bg-bench-raised px-1.5 py-0.5 font-mono text-[10px] text-bench-muted ring-1 ring-bench-rule sm:inline">
+            DEV
           </span>
-          <kbd className="ml-auto hidden rounded border border-bench-rule px-1.5 font-mono text-[10px] text-bench-muted sm:inline">`</kbd>
-          <ChevronUp className={cn("size-4 transition-transform duration-300", open ? "rotate-180" : "")} aria-hidden />
+          <span className="truncate text-[12px] text-bench-muted">
+            {open
+              ? "No hardware is attached. Everything above is driven by these fake sensors."
+              : "No hardware attached — open this to fake sensor readings and skip time"}
+          </span>
+          <span className="ml-auto hidden shrink-0 font-mono text-[11px] text-bench-muted lg:inline">
+            {SPEED_LABEL[speed].short} · {profiles[selected]?.name} · {link}
+          </span>
+          <kbd className="hidden shrink-0 rounded border border-bench-rule px-1.5 font-mono text-[10px] text-bench-muted sm:inline">
+            `
+          </kbd>
+          <ChevronUp
+            className={cn("size-4 shrink-0 transition-transform duration-300", open ? "rotate-180" : "")}
+            aria-hidden
+          />
         </button>
 
         <div
@@ -71,21 +85,29 @@ export function SimulationDrawer() {
           )}
           inert={!open}
         >
-          <div className="overflow-hidden">
-            <div className="grid gap-x-8 gap-y-6 border-t border-bench-rule py-5 pb-6 md:grid-cols-2 xl:grid-cols-[1.1fr_1.4fr_1fr_1fr]">
-              <Group label="Target node">
+          <div className="overflow-hidden border-t border-bench-rule">
+            <DemoWalkthrough />
+            <div className="grid gap-x-8 gap-y-6 py-5 pb-6 md:grid-cols-2 xl:grid-cols-[1.1fr_1.4fr_1fr_1fr]">
+              <Group label="Which pot" hint="The two controls to the right act on this pot.">
                 <Segmented
                   theme="bench"
                   size="sm"
-                  label="Target node"
+                  label="Which pot"
                   value={selected}
                   onChange={(id) => actions().selectHerb(id)}
-                  options={order.map((id) => ({ value: id, label: profiles[id]!.name }))}
+                  options={order.map((id) => ({
+                    value: id,
+                    label: profiles[id]!.name,
+                  }))}
                   className="flex-wrap"
                 />
               </Group>
 
-              <Group label="Force moisture" value={`${sliderValue}%`}>
+              <Group
+                label="Set soil moisture"
+                value={`${sliderValue}%`}
+                hint={`Line is at ${threshold}%. Drag below it to trigger a water alert.`}
+              >
                 <Slider
                   tone="bench"
                   min={0}
@@ -101,14 +123,13 @@ export function SimulationDrawer() {
                   onValueCommit={() => setDrag(null)}
                   thumbLabel={`Force ${profiles[selected]?.name} soil moisture`}
                 />
-                <p className="mt-2 text-[11px] text-bench-muted">Overrides the soil value; physics continue from there.</p>
               </Group>
 
-              <Group label="Simulation speed">
+              <Group label="Clock speed" hint="20× makes a 60 s watering run take 3 s.">
                 <Segmented
                   theme="bench"
                   size="sm"
-                  label="Simulation speed"
+                  label="Clock speed"
                   value={speed}
                   onChange={(v) => actions().setSpeed(v)}
                   options={SIM_SPEEDS.map((v) => ({
@@ -125,7 +146,7 @@ export function SimulationDrawer() {
               </Group>
 
               <div className="grid gap-6 sm:grid-cols-2 md:col-span-2 xl:col-span-1 xl:grid-cols-1">
-                <Group label="Fast-forward growth">
+                <Group label="Skip days" hint="Moves every pot along its regrowth cycle.">
                   <div className="flex gap-2">
                     {[1, 3].map((d) => (
                       <button
@@ -139,7 +160,7 @@ export function SimulationDrawer() {
                     ))}
                   </div>
                 </Group>
-                <Group label="Network">
+                <Group label="Sensor link" hint="Glitch drops packets. Offline hides the pot entirely.">
                   <Segmented<LinkMode>
                     theme="bench"
                     size="sm"
@@ -147,9 +168,36 @@ export function SimulationDrawer() {
                     value={link}
                     onChange={(m) => actions().setLink(selected, m)}
                     options={[
-                      { value: "online", label: <><Wifi aria-hidden />Stable</>, hint: "Healthy link" },
-                      { value: "lossy", label: <><Radio aria-hidden />Glitch</>, hint: "40% telemetry packet loss, weak RSSI" },
-                      { value: "offline", label: <><WifiOff aria-hidden />Offline</>, hint: "Sensor disconnected; broker publishes last will" },
+                      {
+                        value: "online",
+                        label: (
+                          <>
+                            <Wifi aria-hidden />
+                            Stable
+                          </>
+                        ),
+                        hint: "Healthy link",
+                      },
+                      {
+                        value: "lossy",
+                        label: (
+                          <>
+                            <Radio aria-hidden />
+                            Glitch
+                          </>
+                        ),
+                        hint: "40% telemetry packet loss, weak RSSI",
+                      },
+                      {
+                        value: "offline",
+                        label: (
+                          <>
+                            <WifiOff aria-hidden />
+                            Offline
+                          </>
+                        ),
+                        hint: "Sensor disconnected; broker publishes last will",
+                      },
                     ]}
                   />
                 </Group>
@@ -162,14 +210,27 @@ export function SimulationDrawer() {
   );
 }
 
-function Group({ label, value, children }: { label: string; value?: string; children: ReactNode }) {
+function Group({
+  label,
+  value,
+  hint,
+  children,
+}: {
+  label: string;
+  value?: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <div className="min-w-0">
       <div className="mb-2.5 flex items-baseline justify-between">
-        <span className="font-sans text-[11px] font-semibold tracking-[0.14em] text-bench-muted uppercase">{label}</span>
+        <span className="font-sans text-[11px] font-semibold tracking-[0.14em] text-bench-muted uppercase">
+          {label}
+        </span>
         {value && <span className="tabular font-mono text-[12px] font-semibold">{value}</span>}
       </div>
       {children}
+      {hint && <p className="mt-2 text-[11px] text-bench-muted">{hint}</p>}
     </div>
   );
 }

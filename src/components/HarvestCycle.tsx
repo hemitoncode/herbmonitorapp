@@ -19,7 +19,7 @@ export function HarvestCycle({ state, days, cycle }: { state: HarvestState; days
           <span className="font-normal text-ink-muted"> of {cycle}-day cycle</span>
         </span>
         <span className="font-mono text-[11px] text-ink-muted">
-          peak d{Math.ceil(state.peakStartDay)}–{Math.ceil(state.boltingDay) - 1}
+          peak: days {Math.ceil(state.peakStartDay)}–{Math.ceil(state.boltingDay) - 1}
         </span>
       </div>
       <div
@@ -27,8 +27,17 @@ export function HarvestCycle({ state, days, cycle }: { state: HarvestState; days
         role="img"
         aria-label={`Day ${days} of ${cycle}. Peak window from day ${Math.ceil(state.peakStartDay)}, bolting risk from day ${Math.ceil(state.boltingDay)}.`}
       >
-        <div className="absolute inset-y-0 rounded-full bg-leaf/30" style={{ left: pct(state.peakStartDay), width: `calc(${pct(state.boltingDay)} - ${pct(state.peakStartDay)} - 2px)` }} />
-        <div className="absolute inset-y-0 right-0 rounded-r-full bg-amber/35" style={{ left: pct(state.boltingDay) }} />
+        <div
+          className="absolute inset-y-0 rounded-full bg-leaf/30"
+          style={{
+            left: pct(state.peakStartDay),
+            width: `calc(${pct(state.boltingDay)} - ${pct(state.peakStartDay)} - 2px)`,
+          }}
+        />
+        <div
+          className="absolute inset-y-0 right-0 rounded-r-full bg-amber/35"
+          style={{ left: pct(state.boltingDay) }}
+        />
         <div
           className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left] duration-500 ease-out"
           style={{ left: pct(days) }}
