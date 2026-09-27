@@ -162,15 +162,16 @@ function HerbCard({ herbId, index }: { herbId: string; index: number }) {
                 : "Stop watering"}
             </Button>
           ) : (
-            <Button
-              variant={advice.kind === "water" ? "water" : "outline"}
-              disabled={!runtime.online}
-              onClick={() => actions().quickWater(herbId)}
-              title="Opens the valve and closes it again at the middle of the optimal range"
-            >
-              <Droplet aria-hidden />
-              {advice.kind === "water" ? "Water now" : "Water anyway"}
-            </Button>
+            advice.kind === "water" && (
+              <Button
+                variant="water"
+                onClick={() => actions().quickWater(herbId)}
+                title="Opens the valve and closes it again at the middle of the optimal range"
+              >
+                <Droplet aria-hidden />
+                Water now
+              </Button>
+            )
           )}
           <Button
             variant="ghost"
