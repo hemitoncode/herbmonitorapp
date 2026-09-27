@@ -9,10 +9,18 @@ function setup() {
   const bus = new InMemoryMqttBus();
   const engine = new VirtualNodeEngine({
     transport: bus,
-    nodes: HERB_SEEDS.map((s) => ({ herbId: s.profile.id, moisture: s.initialMoisture, totalLiters: s.lifetimeLiters })),
+    nodes: HERB_SEEDS.map((s) => ({
+      herbId: s.profile.id,
+      moisture: s.initialMoisture,
+      totalLiters: s.lifetimeLiters,
+    })),
     seed: 7,
   });
-  const store = createGardenStore({ transport: bus, simulator: engine, seeds: HERB_SEEDS });
+  const store = createGardenStore({
+    transport: bus,
+    simulator: engine,
+    seeds: HERB_SEEDS,
+  });
   engine.boot();
   store.flush();
   const tick = (seconds = 1) => {
@@ -67,7 +75,10 @@ describe("spec §6 demo walkthrough", () => {
     expect(profile.daysSinceLastCut).toBe(0);
     expect(harvestState(profile).status).toBe("regrowing");
     expect(store.getState().totalHarvests).toBe(1);
-    expect(store.getState().harvests[0]).toMatchObject({ herbId: "basil", daysSinceLastCut: 8 });
+    expect(store.getState().harvests[0]).toMatchObject({
+      herbId: "basil",
+      daysSinceLastCut: 8,
+    });
   });
 });
 
@@ -136,6 +147,9 @@ describe("garden store", () => {
     store.getState().startWatering("basil");
     store.flush();
     const out = basil().log.filter((e) => e.direction === "out");
-    expect(out.at(-1)).toMatchObject({ topic: "garden/basil/valve/command", payload: '{"action":"START"}' });
+    expect(out.at(-1)).toMatchObject({
+      topic: "garden/basil/valve/command",
+      payload: '{"action":"START"}',
+    });
   });
 });

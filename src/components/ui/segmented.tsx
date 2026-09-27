@@ -31,7 +31,12 @@ export function Segmented<T extends string | number>({
   const bench = theme === "bench";
 
   const onKeyDown = (event: KeyboardEvent, index: number) => {
-    const delta = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+    const delta =
+      event.key === "ArrowRight" || event.key === "ArrowDown"
+        ? 1
+        : event.key === "ArrowLeft" || event.key === "ArrowUp"
+          ? -1
+          : 0;
     if (!delta) return;
     event.preventDefault();
     const next = (index + delta + options.length) % options.length;

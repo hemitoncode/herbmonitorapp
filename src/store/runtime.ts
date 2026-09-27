@@ -21,7 +21,11 @@ const engine = new VirtualNodeEngine({
   seed: Date.now(),
 });
 
-export const gardenStore = createGardenStore({ transport: bus, simulator: engine, seeds: HERB_SEEDS });
+export const gardenStore = createGardenStore({
+  transport: bus,
+  simulator: engine,
+  seeds: HERB_SEEDS,
+});
 
 engine.boot();
 engine.start();
@@ -41,7 +45,10 @@ export function useGarden<T>(selector: (state: GardenState) => T): T {
 
 /** Everything a herb view needs: profile + live runtime. */
 export function useHerbTelemetry(herbId: string) {
-  return useGarden((s) => ({ profile: s.profiles[herbId]!, runtime: s.runtime[herbId]! }));
+  return useGarden((s) => ({
+    profile: s.profiles[herbId]!,
+    runtime: s.runtime[herbId]!,
+  }));
 }
 
 export const actions = () => gardenStore.getState();

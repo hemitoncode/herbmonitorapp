@@ -1,9 +1,4 @@
-import type {
-  BusMessage,
-  MessageHandler,
-  PublishOptions,
-  TelemetryTransport,
-} from "./transport";
+import type { BusMessage, MessageHandler, PublishOptions, TelemetryTransport } from "./transport";
 
 /**
  * MQTT 3.1.1 topic-filter matching.

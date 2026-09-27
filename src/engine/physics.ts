@@ -46,7 +46,6 @@ export function sensorJitter(random: Random): number {
   return Math.max(-PHYSICS.jitterBound, Math.min(PHYSICS.jitterBound, n));
 }
 
-export const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
+export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 export const litersForSeconds = (seconds: number) => seconds * (PHYSICS.flowRateLpm / 60);

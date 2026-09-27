@@ -9,7 +9,20 @@ npm test           # engine, bus, domain and full demo-scenario tests
 npm run build      # typecheck + production build
 ```
 
-Press <kbd>`</kbd> (or click the bar at the bottom) to open the **simulation harness**.
+Press <kbd>`</kbd> (or click the bar at the bottom) to open the **simulation harness**. It has a five-step guided walkthrough that ticks itself off as you go.
+
+## What the app tells you to do
+
+Every instruction comes from one function, `nextSteps()` in `src/domain/nextStep.ts`, so the to-do list at the top of the Kitchen view, the "next step" box on each herb card and the Telemetry banner can never disagree.
+
+| State | Instruction | Button |
+|---|---|---|
+| Bolting | Cut it today | Log Harvest |
+| Below the moisture line | Water it | Water now (stops itself mid-range) |
+| Valve open | It's being watered | Stop |
+| Sensor offline | Check the pot by hand | Diagnose |
+| Peak window | Clip it | Log Harvest |
+| Regrowing | Leave it, ready in N days | — |
 
 ## Architecture
 

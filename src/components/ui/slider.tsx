@@ -21,7 +21,10 @@ export function Slider({ className, tone = "ink", trackChildren, thumbLabel, ...
   const onBench = tone === "bench";
   return (
     <SliderPrimitive.Root
-      className={cn("relative flex h-6 w-full touch-none items-center select-none data-[disabled]:opacity-50", className)}
+      className={cn(
+        "relative flex h-6 w-full touch-none items-center select-none data-[disabled]:opacity-50",
+        className,
+      )}
       {...props}
     >
       <SliderPrimitive.Track

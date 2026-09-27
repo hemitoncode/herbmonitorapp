@@ -7,14 +7,7 @@ import type {
   WaterUsedPayload,
 } from "@/hal/topics";
 import type { TelemetryTransport } from "@/hal/transport";
-import {
-  PHYSICS,
-  WATCHDOG_WARNING,
-  clamp,
-  litersForSeconds,
-  sensorJitter,
-  type Random,
-} from "./physics";
+import { PHYSICS, WATCHDOG_WARNING, clamp, litersForSeconds, sensorJitter, type Random } from "./physics";
 
 const round = (value: number, digits: number) => Math.round(value * 10 ** digits) / 10 ** digits;
 
@@ -62,9 +55,8 @@ export class VirtualNode {
     this.simNow = options.simNow;
     this.temperature = 21 + this.random() * 2;
 
-    this.unsubscribe = this.transport.subscribe<ValveCommandPayload>(
-      topics.valveCommand(this.herbId),
-      ({ payload }) => this.onCommand(payload),
+    this.unsubscribe = this.transport.subscribe<ValveCommandPayload>(topics.valveCommand(this.herbId), ({ payload }) =>
+      this.onCommand(payload),
     );
   }
 
@@ -165,7 +157,10 @@ export class VirtualNode {
     this.transport.publish<WaterUsedPayload>(
       topics.waterUsed(this.herbId),
       // Firmware reports 0.1 mL resolution, like a real pulse counter.
-      { sessionLiters: round(this.sessionLiters, 4), totalLiters: round(this.totalLiters, 4) },
+      {
+        sessionLiters: round(this.sessionLiters, 4),
+        totalLiters: round(this.totalLiters, 4),
+      },
       { retain: true },
     );
   }

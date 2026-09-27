@@ -45,7 +45,10 @@ function leafOutline(len: number, width: number, serrated = false): string {
     const y = 3 * u * u * t * (-len * 0.2) + 3 * u * t * t * (-len * 0.78) + t * t * t * -len;
     right.push([i % 2 === 1 && i < steps ? x * 1.14 : x, y]);
   }
-  const left = right.slice().reverse().map(([x, y]) => [-x, y] as Pt);
+  const left = right
+    .slice()
+    .reverse()
+    .map(([x, y]) => [-x, y] as Pt);
   return `M${[...right, ...left].map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join("L")}Z`;
 }
 
@@ -70,8 +73,16 @@ function Leaf({
 }) {
   return (
     <g transform={`translate(${x} ${y}) rotate(${angle})`}>
-      <path d={leafOutline(len, width, serrated)} fill={fill} stroke={STROKE} strokeWidth={1.1} strokeLinejoin="round" />
-      {rib && <path d={`M0 -1 L0 ${-len * 0.82}`} stroke={STROKE} strokeWidth={0.7} opacity={0.55} strokeLinecap="round" />}
+      <path
+        d={leafOutline(len, width, serrated)}
+        fill={fill}
+        stroke={STROKE}
+        strokeWidth={1.1}
+        strokeLinejoin="round"
+      />
+      {rib && (
+        <path d={`M0 -1 L0 ${-len * 0.82}`} stroke={STROKE} strokeWidth={0.7} opacity={0.55} strokeLinecap="round" />
+      )}
     </g>
   );
 }
@@ -218,14 +229,37 @@ function Thyme() {
   );
 }
 
-const PLANTS: Record<string, () => ReactElement> = { basil: Basil, mint: Mint, rosemary: Rosemary, thyme: Thyme };
+const PLANTS: Record<string, () => ReactElement> = {
+  basil: Basil,
+  mint: Mint,
+  rosemary: Rosemary,
+  thyme: Thyme,
+};
 
 /** Stem tips where flower spikes appear when a herb bolts. */
 const TIPS: Record<string, Pt[]> = {
-  basil: [[80, 44], [50, 88], [110, 82]],
-  mint: [[79, 42], [54, 76], [108, 86]],
-  rosemary: [[84, 34], [50, 56], [112, 62]],
-  thyme: [[80, 72], [44, 96], [118, 98], [60, 78], [102, 76]],
+  basil: [
+    [80, 44],
+    [50, 88],
+    [110, 82],
+  ],
+  mint: [
+    [79, 42],
+    [54, 76],
+    [108, 86],
+  ],
+  rosemary: [
+    [84, 34],
+    [50, 56],
+    [112, 62],
+  ],
+  thyme: [
+    [80, 72],
+    [44, 96],
+    [118, 98],
+    [60, 78],
+    [102, 76],
+  ],
 };
 
 function Flowers({ tips }: { tips: Pt[] }) {
@@ -302,7 +336,12 @@ export const HerbIllustration = memo(function HerbIllustration({
           />
         ))}
       {/* Pot */}
-      <path d="M46 162 L52 194 Q53 197 56 197 L104 197 Q107 197 108 194 L114 162Z" fill="var(--color-clay)" stroke={STROKE} strokeWidth={1.2} />
+      <path
+        d="M46 162 L52 194 Q53 197 56 197 L104 197 Q107 197 108 194 L114 162Z"
+        fill="var(--color-clay)"
+        stroke={STROKE}
+        strokeWidth={1.2}
+      />
       <path d="M57 168 L61 190" stroke="#fff" strokeOpacity={0.22} strokeWidth={4} strokeLinecap="round" />
       <rect x={38} y={153} width={84} height={11} rx={3} fill="#b9734f" stroke={STROKE} strokeWidth={1.2} />
     </svg>

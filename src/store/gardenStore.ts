@@ -115,7 +115,13 @@ export interface GardenStore extends StoreApi<GardenState> {
 let logSeq = 0;
 
 function logEntry(topic: string, payload: unknown, receivedAt: number, direction: LogEntry["direction"]): LogEntry {
-  return { id: ++logSeq, topic, payload: JSON.stringify(payload), receivedAt, direction };
+  return {
+    id: ++logSeq,
+    topic,
+    payload: JSON.stringify(payload),
+    receivedAt,
+    direction,
+  };
 }
 
 function pushCapped<T>(list: T[], item: T, cap: number): T[] {
@@ -145,7 +151,10 @@ function applyMessage(rt: HerbRuntime, channel: string, message: BusMessage): He
   switch (channel) {
     case "telemetry": {
       const telemetry = message.payload as TelemetryPayload;
-      const point = { t: Date.parse(telemetry.timestamp), moisture: telemetry.moisture };
+      const point = {
+        t: Date.parse(telemetry.timestamp),
+        moisture: telemetry.moisture,
+      };
       return {
         ...rt,
         log,
@@ -169,7 +178,13 @@ function applyMessage(rt: HerbRuntime, channel: string, message: BusMessage): He
         };
         runs = [run, ...rt.runs].slice(0, RUNS_LENGTH);
       }
-      return { ...rt, log, valve, runs, autoTarget: valve.state === "OPEN" ? rt.autoTarget : null };
+      return {
+        ...rt,
+        log,
+        valve,
+        runs,
+        autoTarget: valve.state === "OPEN" ? rt.autoTarget : null,
+      };
     }
     case "water_used":
       return { ...rt, log, water: message.payload as WaterUsedPayload };
@@ -197,7 +212,10 @@ export function createGardenStore(options: {
       return {
         runtime: {
           ...s.runtime,
-          [herbId]: { ...rt, log: pushCapped(rt.log, logEntry(topic, payload, Date.now(), "out"), LOG_LENGTH) },
+          [herbId]: {
+            ...rt,
+            log: pushCapped(rt.log, logEntry(topic, payload, Date.now(), "out"), LOG_LENGTH),
+          },
         },
       };
     });
@@ -255,7 +273,9 @@ export function createGardenStore(options: {
       const rt = runtime[herbId];
       if (!profile || !rt) return;
       const target = quickWaterTarget(profile.optimalSoilMoistureMin, profile.optimalSoilMoistureMax, rt.threshold);
-      set((s) => ({ runtime: { ...s.runtime, [herbId]: { ...rt, autoTarget: target } } }));
+      set((s) => ({
+        runtime: { ...s.runtime, [herbId]: { ...rt, autoTarget: target } },
+      }));
       publishCommand(herbId, "START");
     },
 
@@ -271,7 +291,10 @@ export function createGardenStore(options: {
           estYieldGrams: profile.estYieldGrams,
         };
         return {
-          profiles: { ...s.profiles, [herbId]: { ...profile, daysSinceLastCut: 0 } },
+          profiles: {
+            ...s.profiles,
+            [herbId]: { ...profile, daysSinceLastCut: 0 },
+          },
           harvests: [event, ...s.harvests],
           totalHarvests: s.totalHarvests + 1,
         };
