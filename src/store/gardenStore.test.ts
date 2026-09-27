@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { harvestState } from "@/domain/harvest";
 import { HERB_SEEDS } from "@/domain/herbs";
 import { VirtualNodeEngine } from "@/engine/engine";
 import { InMemoryMqttBus } from "@/hal/bus";
@@ -42,7 +41,6 @@ describe("spec §6 demo walkthrough", () => {
     expect(basil().telemetry!.moisture).toBeCloseTo(42, 0);
     expect(basil().threshold).toBe(30);
     expect(basil().needsWater).toBe(false);
-    expect(harvestState(store.getState().profiles.basil!).status).toBe("peak");
 
     // 2. Moisture drop via the dev harness
     act.forceMoisture("basil", 24);
@@ -68,17 +66,6 @@ describe("spec §6 demo walkthrough", () => {
     store.flush();
     expect(basil().valve).toMatchObject({ state: "CLOSED", flowRateLpm: 0 });
     expect(basil().water.totalLiters).toBeCloseTo(lifetimeBefore + session, 6);
-
-    // 6. Harvest
-    act.logHarvest("basil");
-    const profile = store.getState().profiles.basil!;
-    expect(profile.daysSinceLastCut).toBe(0);
-    expect(harvestState(profile).status).toBe("regrowing");
-    expect(store.getState().totalHarvests).toBe(1);
-    expect(store.getState().harvests[0]).toMatchObject({
-      herbId: "basil",
-      daysSinceLastCut: 8,
-    });
   });
 });
 
@@ -121,14 +108,6 @@ describe("garden store", () => {
     tick(60);
     expect(basil().runs[0]).toMatchObject({ cause: "watchdog", seconds: 60 });
     expect(basil().runs).toHaveLength(2);
-  });
-
-  it("advancing growth moves every herb through its cycle", () => {
-    const { store } = setup();
-    store.getState().advanceDays(3);
-    const p = store.getState().profiles;
-    expect(p.basil!.daysSinceLastCut).toBe(11);
-    expect(p.rosemary!.daysSinceLastCut).toBe(9);
   });
 
   it("tracks online status via the last-will topic", () => {

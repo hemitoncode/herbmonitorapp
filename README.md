@@ -1,6 +1,6 @@
-# Sprig — Smart Herb Garden & Irrigation Prototype
+# Sprig — Herb Soil Monitor
 
-Kitchen-herb monitor with harvest timing and irrigation control. It runs entirely in the browser: there is no hardware and no broker. A simulated MQTT bus and a set of virtual ESP32-style nodes stand in for both.
+Soil-moisture monitor and irrigation control for a windowsill of kitchen herbs. It runs entirely in the browser: there is no hardware and no broker. A simulated MQTT bus and a set of virtual ESP32-style soil nodes stand in for both.
 
 ```bash
 npm install
@@ -9,20 +9,13 @@ npm test           # engine, bus, domain and full demo-scenario tests
 npm run build      # typecheck + production build
 ```
 
-Press <kbd>`</kbd> (or click the bar at the bottom) to open the **simulation harness**. It has a five-step guided walkthrough that ticks itself off as you go.
+## What it does
 
-## What the app tells you to do
+- **Garden** — one card per pot: live soil moisture against the pot's watering line, a plain-language instruction ("Water Mint. Soil is 37%, below its 40% line…"), and a **Water now** button that opens the valve and closes it again at the middle of the pot's optimal range.
+- **Telemetry** — for one pot at a time: status banner with the action in it, radial gauge, the watering-line slider, manual Start/Stop with a 60 s watchdog countdown, session and lifetime litres, a two-minute moisture trace, node diagnostics, and the raw message log.
+- **Simulation card** (inside Telemetry) — since nothing is plugged in: set the soil moisture directly, change the clock speed (1× / 5× / 20×), and drop or glitch the sensor link.
 
-Every instruction comes from one function, `nextSteps()` in `src/domain/nextStep.ts`, so the to-do list at the top of the Kitchen view, the "next step" box on each herb card and the Telemetry banner can never disagree.
-
-| State | Instruction | Button |
-|---|---|---|
-| Bolting | Cut it today | Log Harvest |
-| Below the moisture line | Water it | Water now (stops itself mid-range) |
-| Valve open | It's being watered | Stop |
-| Sensor offline | Check the pot by hand | Diagnose |
-| Peak window | Clip it | Log Harvest |
-| Regrowing | Leave it, ready in N days | — |
+Every instruction comes from one function, `wateringAdvice()` in `src/domain/watering.ts`, so the headline, the cards and the banner can never disagree.
 
 ## Architecture
 
@@ -30,13 +23,13 @@ Every instruction comes from one function, `nextSteps()` in `src/domain/nextStep
 src/
   hal/        TelemetryTransport interface, InMemoryMqttBus (+ / # wildcards, retained msgs), topic schema
   engine/     VirtualNodeEngine + VirtualNode: drying, absorption, ADC jitter, flow meter, watchdog, link faults
-  domain/     HerbProfile seeds, harvest state machine, watering recommendation (with deadband)
+  domain/     herb profiles, watering recommendation (with deadband) and advice copy
   store/      Zustand store fed only by bus messages; valve commands go out over the bus
-  components/ UI primitives (shadcn-style) + gauge, trend chart, botanical illustrations, sim drawer
-  views/      KitchenView, TelemetryView
+  components/ UI primitives (shadcn-style) + gauge, trend chart, botanical illustrations
+  views/      GardenView, TelemetryView
 ```
 
-The UI never reaches into the engine for data. Everything arrives over `garden/{herbId}/…` topics. To move to real hardware, implement `TelemetryTransport` over MQTT.js and remove the engine in `src/store/runtime.ts`. The simulation harness is the only code that calls the engine directly.
+The UI never reaches into the engine for data. Everything arrives over `garden/{herbId}/…` topics. To move to real hardware, implement `TelemetryTransport` over MQTT.js and remove the engine in `src/store/runtime.ts`. The Simulation card is the only UI that calls the engine directly.
 
 | Topic | Direction | Payload |
 |---|---|---|
@@ -46,18 +39,16 @@ The UI never reaches into the engine for data. Everything arrives over `garden/{
 | `garden/:id/water_used` | node → app (retained) | `{ sessionLiters, totalLiters }` |
 | `garden/:id/status` | node / LWT (retained) | `{ online }` |
 
-## Decisions and deviations from the spec
+## Physics (per simulated second)
 
-The spec has several internal contradictions. This is how each one was resolved:
+- Drying: 0.1 % per minute with the valve closed.
+- Absorption: 1.2 % per second with the valve open, capped at 95 %.
+- Sensor jitter: gaussian, clamped to ±0.4 %.
+- Flow meter: 0.5 L/min.
+- Watchdog: the node closes the valve itself after 60 s of continuous flow.
+- The clock-speed multiplier shortens the real tick interval (1000 ms → 50 ms at 20×) so every rule above shares one clock. At 20× a full 60 s run takes 3 real seconds.
 
-1. **"Regrowing (10 days remaining)" (§6, step 6) contradicts the state machine (§4).** Peak opens at `0.7 × cycle`, which is day 7 for basil. The app says *"Est. 7 days until harvest"*, because a countdown to day 10 would announce the peak window three days late.
-2. **Jitter is ±0.4 % (§3.2) in one place and ±0.5 % (diagram) in another.** The app uses §3.2: gaussian σ = 0.18, clamped to ±0.4.
-3. **A raw `reading < threshold` check flaps.** With ±0.4 % noise and 0.1 %/min drying, the recommendation would flicker for about 8 minutes around the threshold. The app adds a ±0.5 % deadband, so step 4 flips at a reading of about 30.5 % rather than exactly 30 %.
-4. **The speed multiplier shortens the tick interval** (1000 ms → 200 ms → 50 ms). Each tick is still one simulated second, so drying, absorption, flow and the watchdog all share one clock. At 20× the 60 s watchdog fires after 3 real seconds.
-5. **"1.4 L" per session (§5.1) is impossible.** The watchdog caps a run at 60 s × 0.5 L/min = 0.5 L.
-6. **Fast-forward growth only advances harvest days.** Applying 0.1 %/min of drying to a skipped day would empty every pot (−144 % per day).
-7. **Additions to the spec:**
-   - a `status` last-will topic
-   - `runSeconds` and `warning` fields on valve state
-   - a one-tap *Quick water* action that closes the valve by itself at the middle of the optimal range
-   - a recent-runs log that records why each run ended
+## Decisions
+
+- **The recommendation has a ±0.5 % deadband.** A raw `reading < threshold` check would flicker for minutes as the soil dries through the line under sensor noise. The advice therefore flips back to "No Water Needed" at about 30.5 %, not exactly 30 %.
+- **Harvest / clipping tracking was removed** at the owner's request. The app is soil moisture and watering only.

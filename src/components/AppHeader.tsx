@@ -1,4 +1,4 @@
-import { Activity, ChefHat } from "lucide-react";
+import { Activity, Sprout } from "lucide-react";
 import { useRef, type KeyboardEvent } from "react";
 import { StatusDot } from "@/components/ui/badge";
 import { useNow } from "@/lib/hooks";
@@ -6,17 +6,12 @@ import { cn } from "@/lib/utils";
 import type { View } from "@/store/gardenStore";
 import { actions, useGarden } from "@/store/runtime";
 
-const VIEWS: { id: View; label: string; hint: string; icon: typeof ChefHat }[] = [
-  {
-    id: "kitchen",
-    label: "Kitchen",
-    hint: "What to clip and water today",
-    icon: ChefHat,
-  },
+const VIEWS: { id: View; label: string; hint: string; icon: typeof Sprout }[] = [
+  { id: "garden", label: "Garden", hint: "Which pots need water today", icon: Sprout },
   {
     id: "telemetry",
     label: "Telemetry",
-    hint: "Live sensors, valve control, thresholds and the message log",
+    hint: "Live sensors, valve control, thresholds, simulation and the message log",
     icon: Activity,
   },
 ];

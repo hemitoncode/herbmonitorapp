@@ -29,3 +29,73 @@ export function needsWater(
 export function quickWaterTarget(min: number, max: number, threshold: number): number {
   return Math.min(95, Math.max((min + max) / 2, threshold + 2));
 }
+
+/** The slice of runtime the advice depends on. */
+export interface AdviceInput {
+  online: boolean;
+  needsWater: boolean | null;
+  valveOpen: boolean;
+  autoTarget: number | null;
+  moisture: number | null;
+  threshold: number;
+}
+
+export type AdviceKind = "offline" | "pending" | "watering" | "water" | "ok";
+
+export interface Advice {
+  kind: AdviceKind;
+  /** Imperative or status, e.g. "Water Mint". */
+  title: string;
+  /** Why, and what happens next. */
+  detail: string;
+  tone: "amber" | "water" | "leaf" | "offline" | "neutral";
+}
+
+/**
+ * The one place that turns state into an instruction. The garden headline,
+ * each card and the telemetry banner all read from here, so they never disagree.
+ */
+export function wateringAdvice(
+  profile: { name: string; optimalSoilMoistureMin: number; optimalSoilMoistureMax: number },
+  rt: AdviceInput,
+): Advice {
+  const { name } = profile;
+  const pct = rt.moisture === null ? "—" : `${rt.moisture.toFixed(0)}%`;
+  if (!rt.online) {
+    return {
+      kind: "offline",
+      title: `Check ${name} by hand`,
+      detail: "Its sensor is offline: no soil reading, and the valve can't be commanded.",
+      tone: "offline",
+    };
+  }
+  if (rt.needsWater === null) {
+    return { kind: "pending", title: `Waiting for ${name}`, detail: "No telemetry packet yet.", tone: "neutral" };
+  }
+  if (rt.valveOpen) {
+    return {
+      kind: "watering",
+      title: `Watering ${name}`,
+      detail:
+        rt.autoTarget !== null
+          ? `Stops on its own at ${Math.round(rt.autoTarget)}%. Nothing to do.`
+          : "Stop it when you like; the node cuts off after 60 s regardless.",
+      tone: "water",
+    };
+  }
+  if (rt.needsWater) {
+    const target = quickWaterTarget(profile.optimalSoilMoistureMin, profile.optimalSoilMoistureMax, rt.threshold);
+    return {
+      kind: "water",
+      title: `Water ${name}`,
+      detail: `Soil is ${pct}, below its ${rt.threshold}% line. One tap waters it to ${Math.round(target)}% and stops.`,
+      tone: "amber",
+    };
+  }
+  return {
+    kind: "ok",
+    title: `${name} is fine`,
+    detail: `Soil is ${pct}, above its ${rt.threshold}% line. Nothing to do.`,
+    tone: "leaf",
+  };
+}

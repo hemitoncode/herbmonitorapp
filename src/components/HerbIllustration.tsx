@@ -236,51 +236,6 @@ const PLANTS: Record<string, () => ReactElement> = {
   thyme: Thyme,
 };
 
-/** Stem tips where flower spikes appear when a herb bolts. */
-const TIPS: Record<string, Pt[]> = {
-  basil: [
-    [80, 44],
-    [50, 88],
-    [110, 82],
-  ],
-  mint: [
-    [79, 42],
-    [54, 76],
-    [108, 86],
-  ],
-  rosemary: [
-    [84, 34],
-    [50, 56],
-    [112, 62],
-  ],
-  thyme: [
-    [80, 72],
-    [44, 96],
-    [118, 98],
-    [60, 78],
-    [102, 76],
-  ],
-};
-
-function Flowers({ tips }: { tips: Pt[] }) {
-  return (
-    <g className="animate-fade">
-      {tips.map(([x, y]) => (
-        <g key={`${x}-${y}`} transform={`translate(${x} ${y})`}>
-          {[
-            [0, -9],
-            [-3.5, -4.5],
-            [3.5, -4.5],
-            [0, -1],
-          ].map(([dx, dy]) => (
-            <circle key={`${dx}${dy}`} cx={dx} cy={dy} r={2.8} fill="#ecdff2" stroke={STROKE} strokeWidth={0.8} />
-          ))}
-        </g>
-      ))}
-    </g>
-  );
-}
-
 /** Dry soil is sandy tan; saturated soil is dark loam. */
 function soilColor(moisture: number) {
   const t = Math.max(0, Math.min(1, moisture / 70));
@@ -294,10 +249,6 @@ interface HerbIllustrationProps {
   herbId: string;
   moisture: number | null;
   watering?: boolean;
-  /** Canopy size, 0 = just cut, 1 = full. */
-  growth?: number;
-  /** Show flower spikes. */
-  bolting?: boolean;
   className?: string;
 }
 
@@ -305,26 +256,14 @@ export const HerbIllustration = memo(function HerbIllustration({
   herbId,
   moisture,
   watering = false,
-  growth = 1,
-  bolting = false,
   className,
 }: HerbIllustrationProps) {
-  const scale = 0.42 + 0.58 * Math.max(0, Math.min(1, growth));
   const Plant = PLANTS[herbId] ?? Basil;
   const soil = soilColor(moisture ?? 30);
   return (
     <svg viewBox="14 26 132 174" className={cn("overflow-visible", className)} aria-hidden>
       <ellipse cx={80} cy={153} rx={38} ry={6} fill={soil} style={{ transition: "fill 600ms ease" }} />
-      <g
-        style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "80px 152px",
-          transition: "transform 900ms var(--ease-out-quart)",
-        }}
-      >
-        <Plant />
-        {bolting && <Flowers tips={TIPS[herbId] ?? []} />}
-      </g>
+      <Plant />
       {watering &&
         [66, 80, 94].map((x, i) => (
           <path

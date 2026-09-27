@@ -1,5 +1,8 @@
 import {
   ArrowDownLeft,
+  Radio,
+  Wifi,
+  Zap,
   ArrowUpRight,
   CheckCircle2,
   Droplet,
@@ -24,6 +27,10 @@ import { useNow } from "@/lib/hooks";
 import { cn, formatClock, formatDuration } from "@/lib/utils";
 import type { HerbRuntime } from "@/store/gardenStore";
 import { actions, useGarden, useHerbTelemetry } from "@/store/runtime";
+import { Segmented } from "@/components/ui/segmented";
+import { SIM_SPEEDS, type SimSpeed } from "@/engine/engine";
+import type { LinkMode } from "@/engine/virtualNode";
+import { useState } from "react";
 
 export function TelemetryView() {
   const selected = useGarden((s) => s.selectedHerbId);
@@ -142,7 +149,7 @@ function HerbDetail({ herbId }: { herbId: string }) {
           ? `Soil is ${pct}%, already above your ${runtime.threshold}% line. Stop the run, or let the 60 s cutoff do it.`
           : `Soil is ${pct}%, above the ${runtime.threshold}% line you set. Nothing to do.`
         : status === "offline"
-          ? "No packets from this node, so there is no reading and the valve can't be commanded. Check the pot by hand. (Use the harness below to bring it back.)"
+          ? "No packets from this node, so there is no reading and the valve can't be commanded. Check the pot by hand, or set its sensor link back to Stable in the Simulation card."
           : "Waiting for the first telemetry packet.";
 
   const bannerAction = !runtime.online ? null : watering ? (
@@ -213,7 +220,10 @@ function HerbDetail({ herbId }: { herbId: string }) {
             optimalMax={profile.optimalSoilMoistureMax}
           />
         </Card>
-        <Diagnostics runtime={runtime} />
+        <div className="grid gap-5">
+          <Diagnostics runtime={runtime} />
+          <SimulationCard herbId={herbId} />
+        </div>
       </div>
 
       <MqttLog runtime={runtime} />
@@ -580,6 +590,118 @@ function MqttLog({ runtime }: { runtime: HerbRuntime }) {
             ))}
           </tbody>
         </table>
+      </div>
+    </Card>
+  );
+}
+
+const SPEED_LABEL: Record<SimSpeed, { short: string; hint: string }> = {
+  1: { short: "1× Realtime", hint: "One simulated second per second" },
+  5: { short: "5× Fast", hint: "Five simulated seconds per second" },
+  20: { short: "20× Demo", hint: "Twenty simulated seconds per second; a 60 s run takes 3 s" },
+};
+
+/** No hardware is attached. These controls drive the virtual node for this pot. */
+function SimulationCard({ herbId }: { herbId: string }) {
+  const { profile, runtime } = useHerbTelemetry(herbId);
+  const { speed, link } = useGarden((s) => ({ speed: s.speed, link: s.links[herbId] ?? "online" }));
+  const [drag, setDrag] = useState<number | null>(null);
+  const live = runtime.telemetry?.moisture ?? null;
+  const sliderValue = drag ?? (live === null ? 0 : Math.round(live));
+
+  return (
+    <Card title="Simulation" meta="no hardware attached">
+      <div className="space-y-5">
+        <div>
+          <div className="flex items-baseline justify-between">
+            <label htmlFor={`sim-moisture-${herbId}`} className="text-[13px] font-semibold">
+              Set soil moisture
+            </label>
+            <span className="tabular font-mono text-[13px] font-semibold">{sliderValue}%</span>
+          </div>
+          <Slider
+            id={`sim-moisture-${herbId}`}
+            className="mt-3"
+            tone="amber"
+            min={0}
+            max={100}
+            step={1}
+            value={[sliderValue]}
+            disabled={link === "offline"}
+            onValueChange={([v]) => {
+              if (v === undefined) return;
+              setDrag(v);
+              actions().forceMoisture(herbId, v);
+            }}
+            onValueCommit={() => setDrag(null)}
+            thumbLabel={`Force ${profile.name} soil moisture`}
+          />
+          <p className="mt-2 text-[12px] text-ink-muted">
+            Drag below {runtime.threshold}% to trigger a water alert. Physics continue from wherever you leave it.
+          </p>
+        </div>
+
+        <div>
+          <p className="mb-2 text-[13px] font-semibold">Clock speed</p>
+          <Segmented
+            size="sm"
+            label="Clock speed"
+            value={speed}
+            onChange={(v) => actions().setSpeed(v)}
+            options={SIM_SPEEDS.map((v) => ({
+              value: v,
+              label: (
+                <>
+                  {v === 20 && <Zap aria-hidden />}
+                  {SPEED_LABEL[v].short}
+                </>
+              ),
+              hint: SPEED_LABEL[v].hint,
+            }))}
+          />
+        </div>
+
+        <div>
+          <p className="mb-2 text-[13px] font-semibold">Sensor link</p>
+          <Segmented<LinkMode>
+            size="sm"
+            label={`Sensor link for ${profile.name}`}
+            value={link}
+            onChange={(m) => actions().setLink(herbId, m)}
+            options={[
+              {
+                value: "online",
+                label: (
+                  <>
+                    <Wifi aria-hidden />
+                    Stable
+                  </>
+                ),
+                hint: "Healthy link",
+              },
+              {
+                value: "lossy",
+                label: (
+                  <>
+                    <Radio aria-hidden />
+                    Glitch
+                  </>
+                ),
+                hint: "40% packet loss, weak signal",
+              },
+              {
+                value: "offline",
+                label: (
+                  <>
+                    <WifiOff aria-hidden />
+                    Offline
+                  </>
+                ),
+                hint: "Sensor disconnected; broker publishes last will",
+              },
+            ]}
+          />
+        </div>
       </div>
     </Card>
   );

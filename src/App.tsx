@@ -1,15 +1,11 @@
 import { AppHeader } from "@/components/AppHeader";
-import { SimulationDrawer } from "@/components/SimulationDrawer";
 import { cn } from "@/lib/utils";
 import { useGarden } from "@/store/runtime";
-import { KitchenView } from "@/views/KitchenView";
+import { GardenView } from "@/views/GardenView";
 import { TelemetryView } from "@/views/TelemetryView";
 
 export function App() {
-  const { view, drawerOpen } = useGarden((s) => ({
-    view: s.view,
-    drawerOpen: s.drawerOpen,
-  }));
+  const view = useGarden((s) => s.view);
   return (
     <>
       <div className="paper-atmosphere" aria-hidden />
@@ -19,10 +15,7 @@ export function App() {
           id="view-panel"
           role="tabpanel"
           aria-labelledby={`tab-${view}`}
-          className={cn(
-            "mx-auto max-w-[1320px] px-4 pt-10 transition-[padding] duration-300 sm:px-8 sm:pt-14",
-            drawerOpen ? "pb-[34rem] sm:pb-[30rem] xl:pb-[22rem]" : "pb-28",
-          )}
+          className="mx-auto max-w-[1320px] px-4 pt-10 pb-20 sm:px-8 sm:pt-14"
         >
           <div
             key={view}
@@ -31,11 +24,10 @@ export function App() {
               view === "telemetry" && "graph-paper -mx-4 rounded-3xl px-4 py-2 sm:-mx-8 sm:px-8",
             )}
           >
-            {view === "kitchen" ? <KitchenView /> : <TelemetryView />}
+            {view === "garden" ? <GardenView /> : <TelemetryView />}
           </div>
         </main>
       </div>
-      <SimulationDrawer />
     </>
   );
 }

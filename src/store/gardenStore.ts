@@ -60,15 +60,7 @@ export interface HerbRuntime {
 
 export const RUNS_LENGTH = 4;
 
-export interface HarvestEvent {
-  id: string;
-  herbId: string;
-  at: number;
-  daysSinceLastCut: number;
-  estYieldGrams: number;
-}
-
-export type View = "kitchen" | "telemetry";
+export type View = "garden" | "telemetry";
 
 /** The slice of the virtual node engine the dev harness is allowed to touch. */
 export interface Simulator {
@@ -82,25 +74,19 @@ export interface GardenState {
   order: string[];
   profiles: Record<string, HerbProfile>;
   runtime: Record<string, HerbRuntime>;
-  harvests: HarvestEvent[];
-  totalHarvests: number;
   messageCount: number;
 
   view: View;
   selectedHerbId: string;
-  drawerOpen: boolean;
   speed: SimSpeed;
   links: Record<string, LinkMode>;
 
   setView(view: View): void;
   selectHerb(herbId: string): void;
-  setDrawerOpen(open: boolean): void;
   setThreshold(herbId: string, threshold: number): void;
   startWatering(herbId: string): void;
   stopWatering(herbId: string): void;
   quickWater(herbId: string): void;
-  logHarvest(herbId: string): void;
-  advanceDays(days: number): void;
   forceMoisture(herbId: string, value: number): void;
   setSpeed(speed: SimSpeed): void;
   setLink(herbId: string, mode: LinkMode): void;
@@ -226,19 +212,15 @@ export function createGardenStore(options: {
     order: seeds.map((s) => s.profile.id),
     profiles: Object.fromEntries(seeds.map((s) => [s.profile.id, { ...s.profile }])),
     runtime: Object.fromEntries(seeds.map((s) => [s.profile.id, initialRuntime(s)])),
-    harvests: [],
-    totalHarvests: 0,
     messageCount: 0,
 
-    view: "kitchen",
+    view: "garden",
     selectedHerbId: seeds[0]?.profile.id ?? "",
-    drawerOpen: false,
     speed: 1,
     links: Object.fromEntries(seeds.map((s) => [s.profile.id, "online" as LinkMode])),
 
     setView: (view) => set({ view }),
     selectHerb: (selectedHerbId) => set({ selectedHerbId }),
-    setDrawerOpen: (drawerOpen) => set({ drawerOpen }),
 
     setThreshold: (herbId, threshold) =>
       set((s) => {
@@ -278,34 +260,6 @@ export function createGardenStore(options: {
       }));
       publishCommand(herbId, "START");
     },
-
-    logHarvest: (herbId) =>
-      set((s) => {
-        const profile = s.profiles[herbId];
-        if (!profile) return s;
-        const event: HarvestEvent = {
-          id: `${herbId}-${Date.now()}-${s.totalHarvests}`,
-          herbId,
-          at: Date.now(),
-          daysSinceLastCut: profile.daysSinceLastCut,
-          estYieldGrams: profile.estYieldGrams,
-        };
-        return {
-          profiles: {
-            ...s.profiles,
-            [herbId]: { ...profile, daysSinceLastCut: 0 },
-          },
-          harvests: [event, ...s.harvests],
-          totalHarvests: s.totalHarvests + 1,
-        };
-      }),
-
-    advanceDays: (days) =>
-      set((s) => ({
-        profiles: Object.fromEntries(
-          Object.entries(s.profiles).map(([id, p]) => [id, { ...p, daysSinceLastCut: p.daysSinceLastCut + days }]),
-        ),
-      })),
 
     forceMoisture: (herbId, value) => simulator.forceMoisture(herbId, value),
 

@@ -1,28 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { harvestState } from "./harvest";
-import { needsWater, quickWaterTarget } from "./watering";
-
-describe("harvestState", () => {
-  const at = (days: number, cycle = 10) => harvestState({ regrowthCycleDays: cycle, daysSinceLastCut: days });
-
-  it("is regrowing below 70 % of the cycle", () => {
-    expect(at(0)).toMatchObject({ status: "regrowing", daysUntilPeak: 7 });
-    expect(at(0).label).toBe("Regrowing — Est. 7 days until harvest");
-    expect(at(6.5).daysUntilPeak).toBe(1);
-    expect(at(6.5).label).toContain("1 day until");
-  });
-
-  it("is at peak from 70 % up to (not including) 130 %", () => {
-    expect(at(7).status).toBe("peak");
-    expect(at(8).label).toBe("Ready to Clip (Peak Flavor)");
-    expect(at(12.99).status).toBe("peak");
-  });
-
-  it("flags bolting risk at 130 % and beyond", () => {
-    expect(at(13).status).toBe("bolting");
-    expect(at(40).label).toBe("Harvest Urgently (Bolting Risk)");
-  });
-});
+import { needsWater, quickWaterTarget, wateringAdvice, type AdviceInput } from "./watering";
 
 describe("needsWater", () => {
   it("uses a plain comparison for the first reading", () => {
@@ -61,5 +38,38 @@ describe("quickWaterTarget", () => {
   });
   it("never exceeds the 95 % physical cap", () => {
     expect(quickWaterTarget(90, 100, 99)).toBe(95);
+  });
+});
+
+describe("wateringAdvice", () => {
+  const mint = { name: "Mint", optimalSoilMoistureMin: 40, optimalSoilMoistureMax: 70 };
+  const ok: AdviceInput = {
+    online: true,
+    needsWater: false,
+    valveOpen: false,
+    autoTarget: null,
+    moisture: 45,
+    threshold: 40,
+  };
+
+  it("says nothing to do when soil is above the line", () => {
+    expect(wateringAdvice(mint, ok)).toMatchObject({ kind: "ok", title: "Mint is fine" });
+  });
+
+  it("asks for water below the line and names the auto-stop target", () => {
+    const a = wateringAdvice(mint, { ...ok, needsWater: true, moisture: 37 });
+    expect(a).toMatchObject({ kind: "water", title: "Water Mint" });
+    expect(a.detail).toContain("waters it to 55%");
+  });
+
+  it("reports an active run instead of asking again", () => {
+    const a = wateringAdvice(mint, { ...ok, needsWater: true, valveOpen: true, autoTarget: 55 });
+    expect(a).toMatchObject({ kind: "watering" });
+    expect(a.detail).toContain("55%");
+  });
+
+  it("asks for a manual check when offline, and waits before the first packet", () => {
+    expect(wateringAdvice(mint, { ...ok, online: false }).kind).toBe("offline");
+    expect(wateringAdvice(mint, { ...ok, needsWater: null }).kind).toBe("pending");
   });
 });
