@@ -1,0 +1,161 @@
+@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource-variable/newsreader/opsz-italic.css";
+@import "@fontsource-variable/hanken-grotesk/wght.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Surfaces: unbleached linen, not white. */
+  --color-paper: #f3efe4;
+  --color-paper-deep: #e9e3d3;
+  --color-card: #fbf9f3;
+  --color-rule: #ddd6c4;
+  --color-rule-strong: #c7bea8;
+
+  /* Ink: a green-black, so text belongs to the garden rather than a spreadsheet. */
+  --color-ink: #18261e;
+  --color-ink-soft: #3d4d43;
+  --color-ink-muted: #66756b;
+
+  /* Status: emerald = good / peak, amber = act now, water = valve & flow. */
+  --color-leaf: #0f8f62;
+  --color-leaf-deep: #0a6446;
+  --color-leaf-wash: #dcefe3;
+  --color-amber: #d4891a;
+  --color-amber-deep: #7a4905;
+  --color-amber-wash: #f9e7c4;
+  --color-water: #2c6fd1;
+  --color-water-deep: #1c4c97;
+  --color-water-wash: #dce8f8;
+  --color-offline: #8b918c;
+  --color-offline-wash: #e6e4dd;
+  --color-clay: #c4825f;
+
+  /* Workbench (dev drawer). */
+  --color-bench: #121c16;
+  --color-bench-raised: #1b2820;
+  --color-bench-rule: #2c3b32;
+  --color-bench-text: #e8e4d8;
+  --color-bench-muted: #93a197;
+
+  --shadow-card: 0 1px 0 rgb(24 38 30 / 0.04), 0 8px 24px -12px rgb(24 38 30 / 0.18);
+  --shadow-lift: 0 1px 0 rgb(24 38 30 / 0.05), 0 18px 40px -18px rgb(24 38 30 / 0.28);
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+  --animate-rise: rise 700ms var(--ease-out-quart) both;
+  --animate-fade: fade 500ms ease-out both;
+  --animate-ripple: ripple 1.8s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+  --animate-bob: bob 1.8s ease-in-out infinite;
+  --animate-fall: fall 1.1s cubic-bezier(0.55, 0, 1, 0.45) infinite;
+  --animate-blink: blink 1.6s ease-in-out infinite;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes ripple {
+    from { transform: scale(0.55); opacity: 0.55; }
+    to { transform: scale(1.9); opacity: 0; }
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  @keyframes fall {
+    0% { transform: translateY(-6px); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateY(26px); opacity: 0; }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    font-size: 15px;
+    line-height: 1.55;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: var(--color-leaf-wash);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  /* Paper grain + two soft washes of light. Fixed so it doesn't scroll-shimmer. */
+  .paper-atmosphere {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(60rem 40rem at 8% -10%, rgb(15 143 98 / 0.09), transparent 60%),
+      radial-gradient(50rem 36rem at 105% 0%, rgb(212 137 26 / 0.08), transparent 60%);
+  }
+  .paper-atmosphere::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.45;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .22 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Graph paper for the engineering view. */
+  .graph-paper {
+    background-image:
+      linear-gradient(to right, rgb(24 38 30 / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(24 38 30 / 0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .eyebrow {
+    @apply font-sans text-[11px] font-semibold tracking-[0.14em] text-ink-muted uppercase;
+  }
+
+  .stagger > * {
+    animation: var(--animate-rise);
+    animation-delay: calc(var(--i, 0) * 70ms + 120ms);
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
